@@ -15,9 +15,11 @@ data Command = Add String
              | Delete Int 
              | Rename Int String
              | Mark Int TaskState
+             | Open String
+             | Save String
              | Help
              | Exit
-             deriving (Show)
+             | Error String deriving (Show)
 
 analyseInput :: String -> Command
 analyseInput input = case (map toLower first) of
@@ -26,23 +28,34 @@ analyseInput input = case (map toLower first) of
                                   then
                                     Delete $ parseInt (head remain)
                                   else
-                                    error "A number was expected"
+                                    Error "A number was expected"
                       "rename" -> if length remain >= 2
                                   then
                                     Rename (parseInt (head remain))
                                            (intercalate " " $ tail remain)
                                   else
-                                    error "Two arguments where expected"
+                                    Error "Two arguments where expected"
                       "mark"   -> if length remain >= 2
                                   then let (second:third:_) = remain in
                                     Mark (parseInt second)
                                          (read third  :: TaskState)
                                   else 
-                                    error "Two arguments were expected"
+                                    Error "Two arguments were expected"
                       "help"   -> Help
+                      "open"   -> if length remain > 0
+                                  then
+                                    Open $ intercalate " " remain
+                                  else
+                                    Error "A path must be provided."
+
+                      "save"   -> if length remain > 0
+                                  then
+                                    Save $ intercalate " " remain
+                                  else
+                                    Save ""
                       "quit"   -> Exit
                       "exit"   -> Exit
-                      _        -> error "Unknown command"
+                      _        -> Error "Unknown command"
 		    where
                       (first:remain) = words input
                       parseInt :: String -> Int
